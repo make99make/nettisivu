@@ -37,33 +37,29 @@
   <button onclick="viePDF()">📄 Vie PDF</button>
   <button onclick="lahetaSahkoposti()">📧 Lähetä sähköposti</button>
 
-  <!-- ✅ EmailJS: uusi SDK -->
+  <!-- ✅ EmailJS SDK -->
   <script type="module">
     import emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
 
-    emailjs.init("UgTsc22XOYOLJqdur");
-    window.emailjs = emailjs; // Jotta voit käyttää sitä muissa funktioissa
+    emailjs.init("UgTsc22XOYOLJqdur"); // ← sinun public key
+    window.emailjs = emailjs; // tehdään saataville toisessa scriptissä
   </script>
 
-  <!-- ✅ Firebase ja toiminnallisuudet -->
+  <!-- ✅ Firebase + toiminnot -->
   <script>
-    // 🔧 Firebase-konfiguraatio
     const firebaseConfig = {
       apiKey: "AIzaSyCdiaGQQz0roX8nz-qLdp6R8xrWSpr4Aio",
       authDomain: "salaojaraportti.firebaseapp.com",
-      databaseURL: "https://salaojaraportti-default-rtdb.firebaseio.com",
       projectId: "salaojaraportti",
       storageBucket: "salaojaraportti.appspot.com",
       messagingSenderId: "818436123380",
-      appId: "1:818436123380:web:7e90731c30402f71e50ca1",
-      measurementId: "G-F15ZDPXNYV"
+      appId: "1:818436123380:web:7e90731c30402f71e50ca1"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const kentat = ["kohde", "osoite", "paiva", "tutkija", "tarkoitus", "menetelma", "havainnot", "suositukset", "email"];
 
-    // ✅ Firebaseen tallennus
     function tallenna() {
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
@@ -72,7 +68,6 @@
         .catch(err => alert("Virhe tallennuksessa: " + err));
     }
 
-    // ✅ PDF:n vienti
     async function viePDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -85,12 +80,31 @@
       doc.save("raportti.pdf");
     }
 
-    // ✅ EmailJS-lähetys
-    function lahetaSahkoposti() {
+    async function getPdfBase64() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+      kentat.forEach(id => {
+        const val = document.getElementById(id).value;
+        doc.text(`${id}: ${val}`, 10, y);
+        y += 10;
+      });
+      return doc.output("datauristring"); // sisältää: data:application/pdf;base64,...
+    }
+
+    async function lahetaSahkoposti() {
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
-      emailjs.send("service_jk8fxlu", "template_m9rvwws", data)
-        .then(() => alert("Sähköposti lähetetty"))
+
+      const pdfBase64 = await getPdfBase64();
+
+      const params = {
+        ...data,
+        attachment: pdfBase64 // base64-pdf liite
+      };
+
+      emailjs.send("service_jk8fxlu", "template_m9rvwws", params)
+        .then(() => alert("Sähköposti lähetetty liitteellä"))
         .catch(err => alert("Virhe: " + err));
     }
   </script>
