@@ -1,25 +1,41 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Raporttilomake</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
   <style>
-    body { font-family: Arial; max-width: 700px; margin: 2rem auto; background: #f4f4f4; padding: 2rem; }
-    input, textarea, select { width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
-    button { padding: 0.5rem 1rem; margin-right: 1rem; }
+    body {
+      font-family: Arial;
+      max-width: 700px;
+      margin: 2rem auto;
+      background: #f4f4f4;
+      padding: 2rem;
+    }
+    input,
+    textarea,
+    select {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin-right: 1rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>Salaoja- ja viemäritutkimus</h1>
 
-  <input type="text" id="kohde" placeholder="Kohteen nimi">
-  <input type="text" id="osoite" placeholder="Osoite">
-  <input type="date" id="paiva">
-  <input type="text" id="tutkija" placeholder="Tutkija">
+  <input type="text" id="kohde" placeholder="Kohteen nimi" />
+  <input type="text" id="osoite" placeholder="Osoite" />
+  <input type="date" id="paiva" />
+  <input type="text" id="tutkija" placeholder="Tutkija" />
   <textarea id="tarkoitus" placeholder="Tutkimuksen tarkoitus"></textarea>
 
   <select id="menetelma">
@@ -32,20 +48,19 @@
   <textarea id="havainnot" placeholder="Havainnot"></textarea>
   <textarea id="suositukset" placeholder="Suositukset"></textarea>
 
-  <input type="email" id="email" placeholder="Sähköpostiosoitteesi raporttiin">
+  <input type="email" id="email" placeholder="Sähköpostiosoitteesi raporttiin" />
 
   <button onclick="tallenna()">💾 Tallenna Firebaseen</button>
   <button onclick="viePDF()">📄 Vie PDF</button>
   <button onclick="lahetaSahkoposti()">📧 Lähetä sähköposti</button>
 
   <script>
-    // ✅ 1. Liitä oma firebaseConfig tähän:
+    // Firebase config - korjaa storageBucket, jos tarvitset storagea (nyt ei pakollinen)
     const firebaseConfig = {
       apiKey: "AIzaSyCdiaGQQz0roX8nz-qLdp6R8xrWSpr4Aio",
       authDomain: "salaojaraportti.firebaseapp.com",
-      databaseURL: "https://salaojaraportti-default-rtdb.firebaseio.com",
       projectId: "salaojaraportti",
-      storageBucket: "salaojaraportti.firebasestorage.app",
+      storageBucket: "salaojaraportti.appspot.com",
       messagingSenderId: "818436123380",
       appId: "1:818436123380:web:7e90731c30402f71e50ca1",
       measurementId: "G-F15ZDPXNYV"
@@ -53,21 +68,34 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const kentat = ["kohde", "osoite", "paiva", "tutkija", "tarkoitus", "menetelma", "havainnot", "suositukset", "email"];
+    const kentat = [
+      "kohde",
+      "osoite",
+      "paiva",
+      "tutkija",
+      "tarkoitus",
+      "menetelma",
+      "havainnot",
+      "suositukset",
+      "email",
+    ];
 
     function tallenna() {
       const data = {};
-      kentat.forEach(id => data[id] = document.getElementById(id).value);
-      db.collection("raportit").add(data)
+      kentat.forEach((id) => {
+        data[id] = document.getElementById(id).value;
+      });
+      db.collection("raportit")
+        .add(data)
         .then(() => alert("Tallennettu Firebaseen"))
-        .catch(err => alert("Virhe tallennuksessa: " + err));
+        .catch((err) => alert("Virhe tallennuksessa: " + err));
     }
 
     async function viePDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       let y = 10;
-      kentat.forEach(id => {
+      kentat.forEach((id) => {
         const val = document.getElementById(id).value;
         doc.text(`${id}: ${val}`, 10, y);
         y += 10;
@@ -75,18 +103,22 @@
       doc.save("raportti.pdf");
     }
 
-    // ✅ EmailJS -lähetys
-    (function() {
-      emailjs.init("YOUR_USER_ID"); // EmailJS user ID
-    })();
+    // EmailJS init - Laita oma user ID tänne:
+    emailjs.init("UgTsc22XOYOLJqdur");
 
     function lahetaSahkoposti() {
-      const data = {};
-      kentat.forEach(id => data[id] = document.getElementById(id).value);
-      emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", data)
+      // EmailJS odottaa objektia, jossa avaimina templateen määritellyt kentät.
+      const templateParams = {};
+      kentat.forEach((id) => {
+        templateParams[id] = document.getElementById(id).value;
+      });
+
+      emailjs
+        .send("service_jk8fxlu", "template_m9rvwws", templateParams)
         .then(() => alert("Sähköposti lähetetty"))
-        .catch(err => alert("Virhe: " + err));
+        .catch((err) => alert("Virhe lähetyksessä: " + err.text));
     }
   </script>
 </body>
 </html>
+
