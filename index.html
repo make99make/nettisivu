@@ -10,6 +10,7 @@
     body { font-family: Arial; max-width: 700px; margin: 2rem auto; background: #f4f4f4; padding: 2rem; }
     input, textarea, select { width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
     button { padding: 0.5rem 1rem; margin-right: 1rem; }
+    small#status { display: block; margin-top: 1rem; color: #555; font-style: italic; }
   </style>
 </head>
 <body>
@@ -37,6 +38,8 @@
   <button onclick="viePDF()">📄 Vie PDF</button>
   <button onclick="lahetaSahkoposti()">📧 Lähetä sähköposti</button>
 
+  <small id="status"></small>
+
   <!-- ✅ EmailJS SDK -->
   <script type="module">
     import emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
@@ -60,12 +63,30 @@
 
     const kentat = ["kohde", "osoite", "paiva", "tutkija", "tarkoitus", "menetelma", "havainnot", "suositukset", "email"];
 
+    function validoi() {
+      for (let id of kentat) {
+        const val = document.getElementById(id).value.trim();
+        if (!val) {
+          alert(`Kenttä "${id}" on pakollinen.`);
+          return false;
+        }
+      }
+      return true;
+    }
+
     function tallenna() {
+      if (!validoi()) return;
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
       db.collection("raportit").add(data)
-        .then(() => alert("Tallennettu Firebaseen"))
-        .catch(err => alert("Virhe tallennuksessa: " + err));
+        .then(() => {
+          alert("Tallennettu Firebaseen");
+          document.getElementById("status").textContent = "Raportti tallennettu tietokantaan.";
+        })
+        .catch(err => {
+          alert("Virhe tallennuksessa: " + err);
+          document.getElementById("status").textContent = "Tallennus epäonnistui.";
+        });
     }
 
     async function viePDF() {
@@ -78,6 +99,7 @@
         y += 10;
       });
       doc.save("raportti.pdf");
+      document.getElementById("status").textContent = "PDF tallennettu koneellesi.";
     }
 
     async function getPdfBase64() {
@@ -89,23 +111,32 @@
         doc.text(`${id}: ${val}`, 10, y);
         y += 10;
       });
-      return doc.output("datauristring"); // sisältää: data:application/pdf;base64,...
+      return doc.output("datauristring");
     }
 
     async function lahetaSahkoposti() {
+      if (!validoi()) return;
+
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
 
-      const pdfBase64 = await getPdfBase64();
+      document.getElementById("status").textContent = "Luodaan PDF ja lähetetään sähköposti...";
 
+      const pdfBase64 = await getPdfBase64();
       const params = {
         ...data,
-        attachment: pdfBase64 // base64-pdf liite
+        attachment: pdfBase64
       };
 
       emailjs.send("service_jk8fxlu", "template_m9rvwws", params)
-        .then(() => alert("Sähköposti lähetetty liitteellä"))
-        .catch(err => alert("Virhe: " + err));
+        .then(() => {
+          alert("Sähköposti lähetetty liitteellä");
+          document.getElementById("status").textContent = "Sähköposti lähetetty onnistuneesti.";
+        })
+        .catch(err => {
+          alert("Virhe: " + err);
+          document.getElementById("status").textContent = "Sähköpostin lähetys epäonnistui.";
+        });
     }
   </script>
 </body>
