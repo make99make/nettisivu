@@ -53,6 +53,7 @@
       color: #777;
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div style="text-align: center; margin-bottom: 1rem;">
@@ -103,6 +104,7 @@
       <select name="kuntoluokka[]">
         <option>KL 5</option>
         <option>KL 4</option>
+        <option>KL 3</option>
         <option>KL 2</option>
         <option>KL 1</option>
       </select>
@@ -121,11 +123,11 @@
   <div style="flex: 2 1 240px; min-width: 200px;">
     <label>Suositeltu toimenpide<br>
       <select name="havainto_toimenpide[]">
-        <option>Jatkotoimenpiteitä ei tarvita.</option>
         <option>Viemäreiden huuhtelu ja puhdistus.</option>
         <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
         <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
         <option>Kansiston uusiminen kaivoon TV14.</option>
+        <option>Jatkotoimenpiteitä ei tarvita.</option>
       </select>
     </label>
   </div>
@@ -135,15 +137,14 @@
   <button type="button" onclick="lisaaAlaotsikko()">+ Lisää uusi alaotsikko</button>
   <div style="margin-top: 2rem;">
     <h3>Kuntoluokkien selite</h3>
-<ul style="font-size: 0.9rem; line-height: 1.5; padding-left: 1.2rem;">
-  <li><strong>KL 1</strong>: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.</li>
-  <li><strong>KL 2</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.</li>
-  <li><strong>KL 3</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 3–5 vuotta / Uusintatutkimus noin 2–3 vuoden kuluttua.</li>
-  <li><strong>KL 4</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.</li>
-  <li><strong>KL 5</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua.</li>
-</ul>
-
-    
+    <ul style="font-size: 0.9rem; line-height: 1.5; padding-left: 1.2rem;">
+      <li><strong>KL 1</strong>: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.</li>
+      <li><strong>KL 2</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.</li>
+      <li><strong>KL 3</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 3–5 vuotta / Uusintatutkimus noin 2–3 vuoden kuluttua.</li>
+      <li><strong>KL 4</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.</li>
+      <li><strong>KL 5</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua.</li>
+    </ul>
+    <p>
       Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.
     </p>
   </div>
@@ -160,66 +161,190 @@
     </div>
 
 <script>
-function lisaaAlaotsikko() {
-  const container = document.getElementById('havainto-container');
-  const uusiOtsikko = document.createElement('div');
-  uusiOtsikko.innerHTML = `
-    <div class="havainto" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-  <div style="flex: 1 1 180px; min-width: 160px;">
-    <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
-  </div>
-  <div style="flex: 1 1 150px; min-width: 140px;">
-    <label>Kuntoluokka<br>
-      <select name="kuntoluokka[]">
-        <option>KL 5</option>
-        <option>KL 4</option>
-        <option>KL 2</option>
-        <option>KL 1</option>
-      </select>
-    </label>
-  </div>
-  <div style="flex: 2 1 200px; min-width: 180px;">
-    <label>Vikalauseke<br>
-      <select name="havainto[]">
-        <option>Ei vikoja</option>
-        <option>Vähäinen vika</option>
-        <option>Merkittävä vika</option>
-        <option>Vakava vika</option>
-      </select>
-    </label>
-  </div>
-  <div style="flex: 2 1 240px; min-width: 200px;">
-    <label>Suositeltu toimenpide<br>
-      <select name="havainto_toimenpide[]">
-        <option>Viemäreiden huuhtelu ja puhdistus.</option>
-        <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
-        <option>Jatkotoimenpiteitä ei tarvita.</option>
-        <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
-        <option>Kansiston uusiminen kaivoon TV14.</option>
-      </select>
-    </label>
-  </div>
-</div>
-  `;
-  container.appendChild(uusiOtsikko);
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  luoPDF();
+});
+
+function luoPDF() {
+  // Tämä toimii varmasti uusimmalla jsPDF:llä:
+  const doc = new window.jspdf.jsPDF();
+
+  // Otsikko ja yritys
+  doc.setFontSize(18);
+  doc.setTextColor(216, 92, 0);
+  doc.text("Hulevex Oy – Kuntotutkimusraportti", 15, 20);
+
+  doc.setFontSize(12);
+  doc.setTextColor(51, 51, 51);
+
+  let y = 35;
+
+  // 1. Kohdetiedot
+  doc.setFontSize(14);
+  doc.text("1. Kohdetiedot", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+  doc.text("Kohdeosoite: " + (document.querySelector('[name="osoite"]').value || "-"), 15, y);
+  y += 7;
+  // Muotoillaan tarkastusajankohta muotoon pp.kk.vvvv
+  let ajankohta = document.querySelector('[name="ajankohta"]').value || "-";
+  if (ajankohta && ajankohta !== "-") {
+    const [yyyy, mm, dd] = ajankohta.split("-");
+    ajankohta = `${dd}.${mm}.${yyyy}`;
+  }
+  doc.text("Tarkastusajankohta: " + ajankohta, 15, y);
+  y += 7;
+
+  // Tarkastajat
+  const tarkastajat = Array.from(document.querySelectorAll('select[name="tarkastajat[]"]'))
+    .map(sel => sel.value).filter(Boolean).join(", ");
+  doc.text("Tarkastajat: " + (tarkastajat || "-"), 15, y);
+  y += 10;
+
+  // 2. Tutkimuksen aihe
+  doc.setFontSize(14);
+  doc.text("2. Tutkimuksen aihe", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+  doc.text("Aihe: " + (document.querySelector('[name="aihe"]').value || "-"), 15, y);
+  y += 10;
+
+  // 3. Yhteenveto havainnoista
+  doc.setFontSize(14);
+  doc.text("3. Yhteenveto havainnoista", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+
+  const havainnot = document.querySelectorAll('#havainto-container .havainto');
+  havainnot.forEach((div, idx) => {
+    const alaotsikko = div.querySelector('[name="alaotsikko[]"]').value || "-";
+    const kuntoluokka = div.querySelector('[name="kuntoluokka[]"]').value || "-";
+    const vikalauseke = div.querySelector('[name="havainto[]"]').value || "-";
+    const toimenpide = div.querySelector('[name="havainto_toimenpide[]"]').value || "-";
+    doc.text(`Havainto ${idx+1}:`, 15, y);
+    y += 6;
+    doc.text(`  Alaotsikko: ${alaotsikko}`, 18, y);
+    y += 6;
+    doc.text(`  Kuntoluokka: ${kuntoluokka}`, 18, y);
+    y += 6;
+    doc.text(`  Vikalauseke: ${vikalauseke}`, 18, y);
+    y += 6;
+    doc.text(`  Suositeltu toimenpide: ${toimenpide}`, 18, y);
+    y += 8;
+    if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  // Kuntoluokkien selite
+  doc.setFontSize(12);
+  doc.text("Kuntoluokkien selite:", 10, y);
+  y += 6;
+  doc.setFontSize(9); // <-- pienempi fontti selitteille
+  const selitteet = [
+    "KL 1: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.",
+    "KL 2: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.",
+    "KL 3: Järjestelmän jäljellä oleva tekninen käyttöikä on 3–5 vuotta / Uusintatutkimus noin 2–3 vuoden kuluttua.",
+    "KL 4: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.",
+    "KL 5: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua."
+  ];
+  selitteet.forEach(s => { doc.text(s, 18, y); y += 5; }); // hieman tiiviimpi riviväli
+
+  y += 4;
+  doc.setFontSize(10);
+  doc.text("Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.", 15, y);
+  y += 10;
+
+  // Videot ja liitteet
+  doc.setFontSize(14);
+  doc.text("Videot ja liitteet", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+  doc.text("Videolinkki: " + (document.querySelector('[name="videolinkki"]').value || "-"), 15, y);
+  y += 7;
+  // Liitetiedostoa ei voi upottaa PDF:ään, mutta mainitaan nimi
+  const liite = document.querySelector('[name="liitetiedosto"]').files[0];
+  doc.text("Liitetiedosto: " + (liite ? liite.name : "-"), 15, y);
+  y += 10;
+
+  // 4. Yhteystiedot
+  doc.setFontSize(14);
+  doc.text("4. Yhteystiedot", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+  doc.text("Raportin laatija: " + (document.querySelector('[name="laatija"]').value || "-"), 15, y);
+  y += 7;
+  // Muotoillaan päivämäärä muotoon pp.kk.vvvv
+  let paiva = document.querySelector('[name="paiva"]').value || "-";
+  if (paiva && paiva !== "-") {
+    const [yyyy, mm, dd] = paiva.split("-");
+    paiva = `${dd}.${mm}.${yyyy}`;
+  }
+  doc.text("Päivämäärä: " + paiva, 15, y);
+
+  doc.save("kuntotutkimusraportti.pdf");
 }
 
 function lisaaTarkastaja() {
   const container = document.getElementById('tarkastaja-container');
-  const uusi = container.firstElementChild.cloneNode(true);
-  uusi.querySelector('select').value = '';
+  const uusi = document.createElement('div');
+  uusi.className = "tarkastaja-valinta";
+  uusi.innerHTML = `
+    <label>Valitse tarkastaja:
+      <select name="tarkastajat[]">
+        <option value="">– Valitse tarkastaja –</option>
+        <option>Saku Savolainen, 0504627998</option>
+        <option>Sami Hemmo, 0400964272</option>
+      </select>
+    </label>
+  `;
   container.appendChild(uusi);
 }
 
-function lisaaHavainto() {
+function lisaaAlaotsikko() {
   const container = document.getElementById('havainto-container');
-  const uusi = container.firstElementChild.cloneNode(true);
-  uusi.querySelectorAll('input, select').forEach(el => el.value = '');
+  const uusi = document.createElement('div');
+  uusi.className = "havainto";
+  uusi.style = "display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;";
+  uusi.innerHTML = `
+    <div style="flex: 1 1 180px; min-width: 160px;">
+      <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
+    </div>
+    <div style="flex: 1 1 150px; min-width: 140px;">
+      <label>Kuntoluokka<br>
+        <select name="kuntoluokka[]">
+          <option>KL 5</option>
+          <option>KL 4</option>
+          <option>KL 3</option>
+          <option>KL 2</option>
+          <option>KL 1</option>
+        </select>
+      </label>
+    </div>
+    <div style="flex: 2 1 200px; min-width: 180px;">
+      <label>Vikalauseke<br>
+        <select name="havainto[]">
+          <option>Ei vikoja</option>
+          <option>Vähäinen vika</option>
+          <option>Merkittävä vika</option>
+          <option>Vakava vika</option>
+        </select>
+      </label>
+    </div>
+    <div style="flex: 2 1 240px; min-width: 200px;">
+      <label>Suositeltu toimenpide<br>
+        <select name="havainto_toimenpide[]">
+          <option>Viemäreiden huuhtelu ja puhdistus.</option>
+          <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
+          <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
+          <option>Kansiston uusiminen kaivoon TV14.</option>
+          <option>Jatkotoimenpiteitä ei tarvita.</option>
+        </select>
+      </label>
+    </div>
+  `;
   container.appendChild(uusi);
 }
 </script>
-
-    
 
     <div class="section">
       <h2>4. Yhteystiedot</h2>
@@ -227,7 +352,7 @@ function lisaaHavainto() {
       <label>Päivämäärä: <input type="date" name="paiva"></label>
     </div>
 
-    <button type="submit">Luo raportti (ei vielä toimi)</button>
+    <button type="submit">Luo raportti</button>
   </form>
 </body>
 </html>
