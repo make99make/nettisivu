@@ -80,97 +80,231 @@
 </div>
 
 <div class="section">
-  <h2>2. Tutkimuksen aihe</h2>
-  <label>Valitse tutkimuksen aihe:
-    <select name="aihe">
-      <option>Viemäriverkoston kuntotutkimus</option>
-      <option>Salaojaverkoston kuntotutkimus</option>
-      <option>Sadevesiverkoston kuntotutkimus</option>
-      <option>Paine huuhtelu</option>
-      <option>kuvaus</option>
-    </select>
-  </label>
+  <h2>2. Tutkimuksen aiheet ja havainnot</h2>
+  <div id="aiheet-container"></div>
+  <button type="button" onclick="lisaaAihe()">+ Lisää tutkimuksen aihe</button>
 </div>
 
     <div class="section">
-  <h2>3. Yhteenveto havainnoista</h2>
-  <div id="havainto-container">
-    <div class="havainto" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-  <div style="flex: 1 1 180px; min-width: 160px;">
-    <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
-  </div>
-  <div style="flex: 1 1 150px; min-width: 140px;">
-    <label>Kuntoluokka<br>
-      <select name="kuntoluokka[]">
-        <option>KL 5</option>
-        <option>KL 4</option>
-        <option>KL 3</option>
-        <option>KL 2</option>
-        <option>KL 1</option>
-      </select>
-    </label>
-  </div>
-  <div style="flex: 2 1 200px; min-width: 180px;">
-    <label>Vikalauseke<br>
-      <select name="havainto[]">
-        <option>Ei vikoja</option>
-        <option>Vähäinen vika</option>
-        <option>Merkittävä vika</option>
-        <option>Vakava vika</option>
-      </select>
-    </label>
-  </div>
-  <div style="flex: 2 1 240px; min-width: 200px;">
-    <label>Suositeltu toimenpide<br>
-      <select name="havainto_toimenpide[]">
-        <option>Viemäreiden huuhtelu ja puhdistus.</option>
-        <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
-        <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
-        <option>Kansiston uusiminen kaivoon TV14.</option>
-        <option>Jatkotoimenpiteitä ei tarvita.</option>
-      </select>
-    </label>
-  </div>
-</div>
-  </div>
-   
-  <button type="button" onclick="lisaaAlaotsikko()">+ Lisää uusi alaotsikko</button>
-  <div style="margin-top: 2rem;">
-    <h3>Kuntoluokkien selite</h3>
-    <ul style="font-size: 0.9rem; line-height: 1.5; padding-left: 1.2rem;">
-      <li><strong>KL 1</strong>: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.</li>
-      <li><strong>KL 2</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.</li>
-      <li><strong>KL 3</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 3–5 vuotta / Uusintatutkimus noin 2–3 vuoden kuluttua.</li>
-      <li><strong>KL 4</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.</li>
-      <li><strong>KL 5</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua.</li>
-    </ul>
-    <p>
-      Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.
-    </p>
-  </div>
-</div>
-
-    <div class="section">
-      <h2>Videot ja liitteet</h2>
-      <label>Lisää videolinkki tai tiedosto:
-        <input type="url" name="videolinkki" placeholder="https://esimerkki.fi/videotutkimus.mp4">
-      </label>
-      <label>Lataa liitetiedosto:
-        <input type="file" name="liitetiedosto">
-      </label>
+      <h2>4. Yhteystiedot</h2>
+      <label>Raportin laatija: <input type="text" name="laatija"></label>
+      <label>Päivämäärä: <input type="date" name="paiva"></label>
     </div>
 
-<script>
+    <button type="submit">Luo raportti</button>
+  </form>
+  <div class="section">
+    <h2>Liitteet</h2>
+    <div id="liitteet-container"></div>
+    <button type="button" onclick="lisaaLiiteRivi()">+ Lisää liite</button>
+  </div>
+
+  <script>
 document.getElementById('reportForm').addEventListener('submit', function(e) {
   e.preventDefault();
+  // Käytetään asynkronista liiteiden käsittelyä
   luoPDF();
 });
 
-function luoPDF() {
-  // Tämä toimii varmasti uusimmalla jsPDF:llä:
-  const doc = new window.jspdf.jsPDF();
+function lisaaAihe() {
+  const aiheetContainer = document.getElementById('aiheet-container');
+  const aiheIndex = aiheetContainer.children.length;
+  const aiheDiv = document.createElement('div');
+  aiheDiv.className = "aihe-osio";
+  aiheDiv.style = "margin-bottom:2rem; border:1px solid #eee; padding:1rem; border-radius:4px;";
 
-  // Otsikko ja yritys
+  aiheDiv.innerHTML = `
+    <label>Tutkimuksen aihe:
+      <select name="aihe_${aiheIndex}">
+        <option>Viemäriverkoston kuntotutkimus</option>
+        <option>Salaojaverkoston kuntotutkimus</option>
+        <option>Sadevesiverkoston kuntotutkimus</option>
+        <option>Paine huuhtelu</option>
+        <option>Kuvaus</option>
+      </select>
+    </label>
+    <div class="havainto-lista" id="havainto-lista-${aiheIndex}">
+    </div>
+    <button type="button" onclick="lisaaAiheenHavainto(this, ${aiheIndex})">+ Lisää havainto tähän aiheeseen</button>
+  `;
+  aiheetContainer.appendChild(aiheDiv);
+  // Lisää yksi havainto automaattisesti
+  lisaaAiheenHavainto(aiheDiv.querySelector('button'), aiheIndex);
+}
+
+function lisaaAiheenHavainto(btn, aiheIndex) {
+  const lista = btn.parentElement.querySelector('.havainto-lista');
+  const havaintoDiv = document.createElement('div');
+  havaintoDiv.className = "havainto";
+  havaintoDiv.style = "display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-top:1rem;";
+  havaintoDiv.innerHTML = `
+    <div style="flex: 1 1 180px; min-width: 160px;">
+      <label>Alaotsikko<br><input type="text" name="alaotsikko_${aiheIndex}[]"></label>
+    </div>
+    <div style="flex: 1 1 150px; min-width: 140px;">
+      <label>Kuntoluokka<br>
+        <select name="kuntoluokka_${aiheIndex}[]">
+          <option>KL 5</option>
+          <option>KL 4</option>
+          <option>KL 3</option>
+          <option>KL 2</option>
+          <option>KL 1</option>
+        </select>
+      </label>
+    </div>
+    <div style="flex: 2 1 200px; min-width: 180px;">
+      <label>Vikalauseke<br>
+        <select name="havainto_${aiheIndex}[]">
+          <option>Ei vikoja</option>
+          <option>Vähäinen vika</option>
+          <option>Merkittävä vika</option>
+          <option>Vakava vika</option>
+        </select>
+      </label>
+    </div>
+    <div style="flex: 2 1 240px; min-width: 200px;">
+      <label>Suositeltu toimenpide<br>
+        <select name="havainto_toimenpide_${aiheIndex}[]">
+          <option>Viemäreiden huuhtelu ja puhdistus.</option>
+          <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
+          <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
+          <option>Kansiston uusiminen kaivoon TV14.</option>
+          <option>Jatkotoimenpiteitä ei tarvita.</option>
+        </select>
+      </label>
+    </div>
+  `;
+  lista.appendChild(havaintoDiv);
+}
+
+function lisaaTarkastaja() {
+  const container = document.getElementById('tarkastaja-container');
+  const uusi = document.createElement('div');
+  uusi.className = "tarkastaja-valinta";
+  uusi.innerHTML = `
+    <label>Valitse tarkastaja:
+      <select name="tarkastajat[]">
+        <option value="">– Valitse tarkastaja –</option>
+        <option>Saku Savolainen, 0504627998</option>
+        <option>Sami Hemmo, 0400964272</option>
+      </select>
+    </label>
+  `;
+  container.appendChild(uusi);
+}
+
+// --- Videot ja kuvat osio (useita kuvia ja videoita) ---
+function lisaaLiiteRivi() {
+  const container = document.getElementById('liitteet-container');
+  const row = document.createElement('div');
+  row.className = "liite-row";
+  row.style = "margin-bottom:1rem; display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;";
+
+  row.innerHTML = `
+    <select class="liite-tyyppi-input" onchange="paivitaLiiteKentta(this)">
+      <option value="video">Video (linkki)</option>
+      <option value="kuva">Kuva (tiedosto)</option>
+    </select>
+    <input type="url" class="video-link-input" placeholder="Videon linkki (https://...)" style="width:220px;">
+    <input type="file" class="kuva-file-input" accept="image/*" style="display:none;width:180px;">
+    <input type="text" class="liite-selite-input" placeholder="Selite mihin havaintoon liittyy" style="width:220px;">
+    <button type="button" onclick="this.parentElement.remove()">Poista</button>
+  `;
+  container.appendChild(row);
+}
+
+function paivitaLiiteKentta(select) {
+  const row = select.parentElement;
+  const videoInput = row.querySelector('.video-link-input');
+  const kuvaInput = row.querySelector('.kuva-file-input');
+  if (select.value === "video") {
+    videoInput.style.display = "";
+    kuvaInput.style.display = "none";
+  } else {
+    videoInput.style.display = "none";
+    kuvaInput.style.display = "";
+  }
+}
+
+// --- PDF:n generointi, huomioi useat aiheet ja liitteet ---
+function lisaaLiiteKentatJaPdf(doc, y, callback) {
+  // Kerätään videot ja kuvat
+  const videot = [];
+  const kuvat = [];
+  document.querySelectorAll('.liite-row').forEach(row => {
+    const tyyppi = row.querySelector('.liite-tyyppi-input').value;
+    const selite = row.querySelector('.liite-selite-input').value || "-";
+    if (tyyppi === "video") {
+      const url = row.querySelector('.video-link-input').value.trim();
+      if (url) videot.push({ url, selite });
+    } else if (tyyppi === "kuva") {
+      const fileInput = row.querySelector('.kuva-file-input');
+      if (fileInput.files && fileInput.files[0]) {
+        kuvat.push({ file: fileInput.files[0], selite });
+      }
+    }
+  });
+
+  // Jos ei yhtään liitettä, jatka suoraan
+  if (videot.length === 0 && kuvat.length === 0) {
+    callback(y);
+    return;
+  }
+
+  doc.setFontSize(14);
+  doc.text("Liitteet", 15, y);
+  y += 8;
+  doc.setFontSize(12);
+
+  let nro = 1;
+  videot.forEach(v => {
+    doc.text(`${nro}. Video: ${v.url}`, 15, y);
+    y += 6;
+    doc.text(`   Selite: ${v.selite}`, 15, y);
+    y += 10;
+    nro++;
+    if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  // Kuvien lisääminen base64-muodossa
+  function lisaaKuvaPdfaan(ind) {
+    if (ind >= kuvat.length) {
+      callback(y);
+      return;
+    }
+    const k = kuvat[ind];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const imgData = evt.target.result;
+      // Isompi kuva: max leveys 120mm, max korkeus 80mm
+      let pdfWidth = 120, pdfHeight = 80;
+      const img = new window.Image();
+      img.onload = function() {
+        const ratio = Math.min(pdfWidth / img.width, pdfHeight / img.height, 1);
+        pdfWidth = img.width * ratio;
+        pdfHeight = img.height * ratio;
+        // Selite kuvan yläpuolelle
+        doc.text(`${nro}. ${k.selite}`, 15, y);
+        y += 6;
+        doc.addImage(imgData, 'JPEG', 15, y, pdfWidth, pdfHeight);
+        y += pdfHeight + 8;
+        nro++;
+        if (y > 270) { doc.addPage(); y = 20; }
+        lisaaKuvaPdfaan(ind + 1);
+      };
+      img.src = imgData;
+    };
+    reader.readAsDataURL(k.file);
+  }
+  if (kuvat.length > 0) {
+    lisaaKuvaPdfaan(0);
+  } else {
+    callback(y);
+  }
+}
+
+function luoPDF() {
+  const doc = new window.jspdf.jsPDF();
   doc.setFontSize(18);
   doc.setTextColor(216, 92, 0);
   doc.text("Hulevex Oy – Kuntotutkimusraportti", 15, 20);
@@ -202,37 +336,67 @@ function luoPDF() {
   doc.text("Tarkastajat: " + (tarkastajat || "-"), 15, y);
   y += 10;
 
-  // 2. Tutkimuksen aihe
+  // 2. Tutkimuksen aiheet ja havainnot
   doc.setFontSize(14);
-  doc.text("2. Tutkimuksen aihe", 15, y);
-  y += 8;
-  doc.setFontSize(12);
-  doc.text("Aihe: " + (document.querySelector('[name="aihe"]').value || "-"), 15, y);
-  y += 10;
-
-  // 3. Yhteenveto havainnoista
-  doc.setFontSize(14);
-  doc.text("3. Yhteenveto havainnoista", 15, y);
+  doc.text("2. Tutkimuksen aiheet ja havainnot", 15, y);
   y += 8;
   doc.setFontSize(12);
 
-  const havainnot = document.querySelectorAll('#havainto-container .havainto');
-  havainnot.forEach((div, idx) => {
-    const alaotsikko = div.querySelector('[name="alaotsikko[]"]').value || "-";
-    const kuntoluokka = div.querySelector('[name="kuntoluokka[]"]').value || "-";
-    const vikalauseke = div.querySelector('[name="havainto[]"]').value || "-";
-    const toimenpide = div.querySelector('[name="havainto_toimenpide[]"]').value || "-";
-    doc.text(`Havainto ${idx+1}:`, 15, y);
-    y += 6;
-    doc.text(`  Alaotsikko: ${alaotsikko}`, 18, y);
-    y += 6;
-    doc.text(`  Kuntoluokka: ${kuntoluokka}`, 18, y);
-    y += 6;
-    doc.text(`  Vikalauseke: ${vikalauseke}`, 18, y);
-    y += 6;
-    doc.text(`  Suositeltu toimenpide: ${toimenpide}`, 18, y);
-    y += 8;
-    if (y > 270) { doc.addPage(); y = 20; }
+  const aiheet = document.querySelectorAll('.aihe-osio');
+  aiheet.forEach((aiheDiv, aiheIdx) => {
+    const aihe = aiheDiv.querySelector(`select[name="aihe_${aiheIdx}"]`).value;
+
+    // Yhdistetään "Aihe:" ja aiheen nimi samalle riville, sama fonttikoko
+    doc.setFontSize(12);
+    doc.text(`Aihe: ${aihe}`, 18, y);
+    y += 7;
+
+    // Taulukon otsikkorivi
+    const colX = [22, 70, 105, 140, 185]; // tiiviimmät sarakkeet
+    doc.setFillColor(216, 92, 0);
+    doc.setTextColor(255,255,255);
+    doc.rect(colX[0]-2, y-5, 170, 8, 'F');
+    doc.setFontSize(10);
+    doc.text("Alaotsikko", colX[0], y, {maxWidth: colX[1]-colX[0]-2});
+    doc.text("Kuntoluokka", colX[1], y, {maxWidth: colX[2]-colX[1]-2});
+    doc.text("Vikalauseke", colX[2], y, {maxWidth: colX[3]-colX[2]-2});
+    doc.text("Suositeltu toimenpide", colX[3], y, {maxWidth: colX[4]-colX[3]-2});
+    y += 8; // SUUREMPI riviväli taulukon otsikon jälkeen
+    doc.setTextColor(51,51,51);
+
+    const havainnot = aiheDiv.querySelectorAll('.havainto');
+    havainnot.forEach((div, idx) => {
+      const alaotsikko = div.querySelector(`[name="alaotsikko_${aiheIdx}[]"]`).value || "-";
+      const kuntoluokka = div.querySelector(`[name="kuntoluokka_${aiheIdx}[]"]`).value || "-";
+      const vikalauseke = div.querySelector(`[name="havainto_${aiheIdx}[]"]`).value || "-";
+      const toimenpide = div.querySelector(`[name="havainto_toimenpide_${aiheIdx}[]"]`).value || "-";
+
+      // Laske rivimäärä jokaiselle sarakkeelle
+      const alaotsikkoLines = doc.splitTextToSize(alaotsikko, colX[1]-colX[0]-2);
+      const kuntoluokkaLines = doc.splitTextToSize(kuntoluokka, colX[2]-colX[1]-2);
+      const vikalausekeLines = doc.splitTextToSize(vikalauseke, colX[3]-colX[2]-2);
+      const toimenpideLines = doc.splitTextToSize(toimenpide, colX[4]-colX[3]-2);
+
+      // Selvitä pisin rivimäärä
+      const maxLines = Math.max(
+        alaotsikkoLines.length,
+        kuntoluokkaLines.length,
+        vikalausekeLines.length,
+        toimenpideLines.length
+      );
+
+      doc.setFontSize(10);
+      doc.text(alaotsikkoLines, colX[0], y, {maxWidth: colX[1]-colX[0]-2});
+      doc.text(kuntoluokkaLines, colX[1], y, {maxWidth: colX[2]-colX[1]-2});
+      doc.text(vikalausekeLines, colX[2], y, {maxWidth: colX[3]-colX[2]-2});
+      doc.text(toimenpideLines, colX[3], y, {maxWidth: colX[4]-colX[3]-2});
+
+      y += maxLines * 6; // 6 on riviväli, säädä tarvittaessa
+
+      if (y > 270) { doc.addPage(); y = 20; }
+    });
+    y += 8; // Lisää tyhjää rivien väliin taulukon jälkeen
+    doc.setFontSize(12);
   });
 
   // Kuntoluokkien selite
@@ -254,105 +418,27 @@ function luoPDF() {
   doc.text("Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.", 15, y);
   y += 10;
 
-  // Videot ja liitteet
-  doc.setFontSize(14);
-  doc.text("Videot ja liitteet", 15, y);
-  y += 8;
-  doc.setFontSize(12);
-  doc.text("Videolinkki: " + (document.querySelector('[name="videolinkki"]').value || "-"), 15, y);
-  y += 7;
-  // Liitetiedostoa ei voi upottaa PDF:ään, mutta mainitaan nimi
-  const liite = document.querySelector('[name="liitetiedosto"]').files[0];
-  doc.text("Liitetiedosto: " + (liite ? liite.name : "-"), 15, y);
-  y += 10;
+  // Liitteet ennen raportin laatijaa
+  lisaaLiiteKentatJaPdf(doc, y, function(y2) {
+    // Raportin laatija -osio
+    doc.setFontSize(14);
+    doc.text("Raportin laatija", 15, y2);
+    y2 += 8;
+    doc.setFontSize(12);
+    doc.text("Nimi: " + (document.querySelector('[name="laatija"]').value || "-"), 15, y2);
+    y2 += 7;
+    // Muotoillaan päivämäärä muotoon pp.kk.vvvv
+    let paiva = document.querySelector('[name="paiva"]').value || "-";
+    if (paiva && paiva !== "-") {
+      const [yyyy, mm, dd] = paiva.split("-");
+      paiva = `${dd}.${mm}.${yyyy}`;
+    }
+    doc.text("Päivämäärä: " + paiva, 15, y2);
+    y2 += 10;
 
-  // 4. Yhteystiedot
-  doc.setFontSize(14);
-  doc.text("4. Yhteystiedot", 15, y);
-  y += 8;
-  doc.setFontSize(12);
-  doc.text("Raportin laatija: " + (document.querySelector('[name="laatija"]').value || "-"), 15, y);
-  y += 7;
-  // Muotoillaan päivämäärä muotoon pp.kk.vvvv
-  let paiva = document.querySelector('[name="paiva"]').value || "-";
-  if (paiva && paiva !== "-") {
-    const [yyyy, mm, dd] = paiva.split("-");
-    paiva = `${dd}.${mm}.${yyyy}`;
-  }
-  doc.text("Päivämäärä: " + paiva, 15, y);
-
-  doc.save("kuntotutkimusraportti.pdf");
+    doc.save("kuntotutkimusraportti.pdf");
+  });
 }
-
-function lisaaTarkastaja() {
-  const container = document.getElementById('tarkastaja-container');
-  const uusi = document.createElement('div');
-  uusi.className = "tarkastaja-valinta";
-  uusi.innerHTML = `
-    <label>Valitse tarkastaja:
-      <select name="tarkastajat[]">
-        <option value="">– Valitse tarkastaja –</option>
-        <option>Saku Savolainen, 0504627998</option>
-        <option>Sami Hemmo, 0400964272</option>
-      </select>
-    </label>
-  `;
-  container.appendChild(uusi);
-}
-
-function lisaaAlaotsikko() {
-  const container = document.getElementById('havainto-container');
-  const uusi = document.createElement('div');
-  uusi.className = "havainto";
-  uusi.style = "display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;";
-  uusi.innerHTML = `
-    <div style="flex: 1 1 180px; min-width: 160px;">
-      <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
-    </div>
-    <div style="flex: 1 1 150px; min-width: 140px;">
-      <label>Kuntoluokka<br>
-        <select name="kuntoluokka[]">
-          <option>KL 5</option>
-          <option>KL 4</option>
-          <option>KL 3</option>
-          <option>KL 2</option>
-          <option>KL 1</option>
-        </select>
-      </label>
-    </div>
-    <div style="flex: 2 1 200px; min-width: 180px;">
-      <label>Vikalauseke<br>
-        <select name="havainto[]">
-          <option>Ei vikoja</option>
-          <option>Vähäinen vika</option>
-          <option>Merkittävä vika</option>
-          <option>Vakava vika</option>
-        </select>
-      </label>
-    </div>
-    <div style="flex: 2 1 240px; min-width: 200px;">
-      <label>Suositeltu toimenpide<br>
-        <select name="havainto_toimenpide[]">
-          <option>Viemäreiden huuhtelu ja puhdistus.</option>
-          <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
-          <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
-          <option>Kansiston uusiminen kaivoon TV14.</option>
-          <option>Jatkotoimenpiteitä ei tarvita.</option>
-        </select>
-      </label>
-    </div>
-  `;
-  container.appendChild(uusi);
-}
-</script>
-
-    <div class="section">
-      <h2>4. Yhteystiedot</h2>
-      <label>Raportin laatija: <input type="text" name="laatija"></label>
-      <label>Päivämäärä: <input type="date" name="paiva"></label>
-    </div>
-
-    <button type="submit">Luo raportti</button>
-  </form>
+  </script>
 </body>
 </html>
