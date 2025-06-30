@@ -2,142 +2,232 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <title>Raporttilomake</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <title>Kuntotutkimusraportti</title>
   <style>
-    body { font-family: Arial; max-width: 700px; margin: 2rem auto; background: #f4f4f4; padding: 2rem; }
-    input, textarea, select { width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
-    button { padding: 0.5rem 1rem; margin-right: 1rem; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f2f2f2;
+      color: #333;
+    }
+    h1 {
+      color: #d85c00;
+    }
+    h2 {
+      color: #666;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    select, input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .section {
+      margin-bottom: 2rem;
+      background: #ffffff;
+      padding: 1rem;
+      border-left: 5px solid #d85c00;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    button {
+      padding: 10px 20px;
+      background: #d85c00;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #a64500;
+    }
+    small {
+      display: block;
+      margin-top: 4px;
+      color: #777;
+    }
   </style>
 </head>
 <body>
-  <h1>Salaoja- ja viemäritutkimus</h1>
+  <div style="text-align: center; margin-bottom: 1rem;">
+    
+  </div>
+  <h1>Hulevex Oy – Kuntotutkimusraportti</h1>
+  <form id="reportForm">
+    <div class="section">
+  <h2>1. Kohdetiedot</h2>
+  <label>Kohdeosoite: <input type="text" name="osoite"></label>
+  <label>Tarkastusajankohta: <input type="date" name="ajankohta"></label>
+  <div id="tarkastaja-container">
+  <div class="tarkastaja-valinta">
+    <label>Valitse tarkastaja:
+      <select name="tarkastajat[]">
+        <option value="">– Valitse tarkastaja –</option>
+        <option>Saku Savolainen, 0504627998</option>
+        <option>Sami Hemmo, 0400964272</option>
+      </select>
+    </label>
+  </div>
+</div>
+<button type="button" onclick="lisaaTarkastaja()">+ Lisää tarkastaja</button>
+</div>
 
-  <input type="text" id="kohde" placeholder="Kohteen nimi">
-  <input type="text" id="osoite" placeholder="Osoite">
-  <input type="date" id="paiva">
-  <input type="text" id="tutkija" placeholder="Tutkija">
-  <textarea id="tarkoitus" placeholder="Tutkimuksen tarkoitus"></textarea>
+<div class="section">
+  <h2>2. Tutkimuksen aihe</h2>
+  <label>Valitse tutkimuksen aihe:
+    <select name="aihe">
+      <option>Viemäriverkoston kuntotutkimus</option>
+      <option>Salaojaverkoston kuntotutkimus</option>
+      <option>Sadevesiverkoston kuntotutkimus</option>
+      <option>Paine huuhtelu</option>
+      <option>kuvaus</option>
+    </select>
+  </label>
+</div>
 
-  <select id="menetelma">
-    <option>Kamerakuvaus</option>
-    <option>Viemärien huuhtelu</option>
-    <option>Salaojien avaaminen</option>
-    <option>Laserkaltevuusmittaus</option>
-  </select>
+    <div class="section">
+  <h2>3. Yhteenveto havainnoista</h2>
+  <div id="havainto-container">
+    <div class="havainto" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+  <div style="flex: 1 1 180px; min-width: 160px;">
+    <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
+  </div>
+  <div style="flex: 1 1 150px; min-width: 140px;">
+    <label>Kuntoluokka<br>
+      <select name="kuntoluokka[]">
+        <option>KL 5</option>
+        <option>KL 4</option>
+        <option>KL 2</option>
+        <option>KL 1</option>
+      </select>
+    </label>
+  </div>
+  <div style="flex: 2 1 200px; min-width: 180px;">
+    <label>Vikalauseke<br>
+      <select name="havainto[]">
+        <option>Ei vikoja</option>
+        <option>Vähäinen vika</option>
+        <option>Merkittävä vika</option>
+        <option>Vakava vika</option>
+      </select>
+    </label>
+  </div>
+  <div style="flex: 2 1 240px; min-width: 200px;">
+    <label>Suositeltu toimenpide<br>
+      <select name="havainto_toimenpide[]">
+        <option>Jatkotoimenpiteitä ei tarvita.</option>
+        <option>Viemäreiden huuhtelu ja puhdistus.</option>
+        <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
+        <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
+        <option>Kansiston uusiminen kaivoon TV14.</option>
+      </select>
+    </label>
+  </div>
+</div>
+  </div>
+   
+  <button type="button" onclick="lisaaAlaotsikko()">+ Lisää uusi alaotsikko</button>
+  <div style="margin-top: 2rem;">
+    <h3>Kuntoluokkien selite</h3>
+<ul style="font-size: 0.9rem; line-height: 1.5; padding-left: 1.2rem;">
+  <li><strong>KL 1</strong>: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.</li>
+  <li><strong>KL 2</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.</li>
+  <li><strong>KL 3</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 3–5 vuotta / Uusintatutkimus noin 2–3 vuoden kuluttua.</li>
+  <li><strong>KL 4</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.</li>
+  <li><strong>KL 5</strong>: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua.</li>
+</ul>
 
-  <textarea id="havainnot" placeholder="Havainnot"></textarea>
-  <textarea id="suositukset" placeholder="Suositukset"></textarea>
+    
+      Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.
+    </p>
+  </div>
+</div>
 
-  <input type="email" id="email" placeholder="Sähköpostiosoitteesi raporttiin">
+    <div class="section">
+      <h2>Videot ja liitteet</h2>
+      <label>Lisää videolinkki tai tiedosto:
+        <input type="url" name="videolinkki" placeholder="https://esimerkki.fi/videotutkimus.mp4">
+      </label>
+      <label>Lataa liitetiedosto:
+        <input type="file" name="liitetiedosto">
+      </label>
+    </div>
 
-  <button onclick="tallenna()">💾 Tallenna Firebaseen</button>
-  <button onclick="viePDF()">📄 Vie PDF</button>
-  <button onclick="lahetaSahkopostiIlmanLiitetta()">📧 Lähetä sähköposti (ilman liitettä)</button>
-  <button onclick="lahetaSahkopostiLiitteella()">📧 Lähetä sähköposti (liitteellä)</button>
+<script>
+function lisaaAlaotsikko() {
+  const container = document.getElementById('havainto-container');
+  const uusiOtsikko = document.createElement('div');
+  uusiOtsikko.innerHTML = `
+    <div class="havainto" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+  <div style="flex: 1 1 180px; min-width: 160px;">
+    <label>Alaotsikko<br><input type="text" name="alaotsikko[]"></label>
+  </div>
+  <div style="flex: 1 1 150px; min-width: 140px;">
+    <label>Kuntoluokka<br>
+      <select name="kuntoluokka[]">
+        <option>KL 5</option>
+        <option>KL 4</option>
+        <option>KL 2</option>
+        <option>KL 1</option>
+      </select>
+    </label>
+  </div>
+  <div style="flex: 2 1 200px; min-width: 180px;">
+    <label>Vikalauseke<br>
+      <select name="havainto[]">
+        <option>Ei vikoja</option>
+        <option>Vähäinen vika</option>
+        <option>Merkittävä vika</option>
+        <option>Vakava vika</option>
+      </select>
+    </label>
+  </div>
+  <div style="flex: 2 1 240px; min-width: 200px;">
+    <label>Suositeltu toimenpide<br>
+      <select name="havainto_toimenpide[]">
+        <option>Viemäreiden huuhtelu ja puhdistus.</option>
+        <option>Salaojien tarkastus seuraavan huoltokauden yhteydessä.</option>
+        <option>Jatkotoimenpiteitä ei tarvita.</option>
+        <option>Putkilinjan kamerakuvaus suositeltavaa.</option>
+        <option>Kansiston uusiminen kaivoon TV14.</option>
+      </select>
+    </label>
+  </div>
+</div>
+  `;
+  container.appendChild(uusiOtsikko);
+}
 
-  <!-- ✅ EmailJS SDK -->
-  <script type="module">
-    import * as emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+function lisaaTarkastaja() {
+  const container = document.getElementById('tarkastaja-container');
+  const uusi = container.firstElementChild.cloneNode(true);
+  uusi.querySelector('select').value = '';
+  container.appendChild(uusi);
+}
 
-    emailjs.init("UgTsc22XOYOLJqdur"); // ← sinun public key
-    window.emailjs = emailjs; // tehdään saataville toisessa scriptissä
-  </script>
+function lisaaHavainto() {
+  const container = document.getElementById('havainto-container');
+  const uusi = container.firstElementChild.cloneNode(true);
+  uusi.querySelectorAll('input, select').forEach(el => el.value = '');
+  container.appendChild(uusi);
+}
+</script>
 
-  <!-- ✅ Firebase + toiminnot -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCdiaGQQz0roX8nz-qLdp6R8xrWSpr4Aio",
-      authDomain: "salaojaraportti.firebaseapp.com",
-      projectId: "salaojaraportti",
-      storageBucket: "salaojaraportti.appspot.com",
-      messagingSenderId: "818436123380",
-      appId: "1:818436123380:web:7e90731c30402f71e50ca1"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    
 
-    const kentat = ["kohde", "osoite", "paiva", "tutkija", "tarkoitus", "menetelma", "havainnot", "suositukset", "email"];
+    <div class="section">
+      <h2>4. Yhteystiedot</h2>
+      <label>Raportin laatija: <input type="text" name="laatija"></label>
+      <label>Päivämäärä: <input type="date" name="paiva"></label>
+    </div>
 
-    function tallenna() {
-      const data = {};
-      kentat.forEach(id => data[id] = document.getElementById(id).value);
-      db.collection("raportit").add(data)
-        .then(() => alert("Tallennettu Firebaseen"))
-        .catch(err => alert("Virhe tallennuksessa: " + err));
-    }
-
-    async function viePDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 10;
-      kentat.forEach(id => {
-        const val = document.getElementById(id).value;
-        doc.text(`${id}: ${val}`, 10, y);
-        y += 10;
-      });
-      doc.save("raportti.pdf");
-    }
-
-    async function getPdfBase64() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let y = 10;
-      kentat.forEach(id => {
-        const val = document.getElementById(id).value;
-        doc.text(`${id}: ${val}`, 10, y);
-        y += 10;
-      });
-      return doc.output("datauristring"); // sisältää: data:application/pdf;base64,...
-    }
-
-    async function lahetaSahkopostiIlmanLiitetta() {
-      const data = {};
-      kentat.forEach(id => data[id] = document.getElementById(id).value);
-
-      emailjs.send("service_jk8fxlu", "template_m9rvwws", data)
-        .then(response => {
-          console.log("Sähköposti lähetetty:", response.status, response.text);
-          alert("Sähköposti lähetetty ilman liitettä!");
-        })
-        .catch(error => {
-          console.error("Virhe sähköpostin lähetyksessä:", error);
-          alert("Sähköpostin lähetys epäonnistui: " + (error.text || error));
-        });
-    }
-
-    async function lahetaSahkopostiLiitteella() {
-      const data = {};
-      kentat.forEach(id => data[id] = document.getElementById(id).value);
-
-      const pdfBase64 = await getPdfBase64();
-
-      // Poistetaan "data:application/pdf;base64," alku base64-datasta
-      const base64Data = pdfBase64.split(',')[1];
-
-      const params = {
-        ...data,
-        attachments: [
-          {
-            name: "raportti.pdf",
-            data: base64Data,
-            encoding: "base64"
-          }
-        ]
-      };
-
-      emailjs.send("service_jk8fxlu", "template_m9rvwws", params)
-        .then(response => {
-          console.log("Sähköposti liitteellä lähetetty:", response.status, response.text);
-          alert("Sähköposti lähetetty liitteellä!");
-        })
-        .catch(error => {
-          console.error("Virhe sähköpostin lähetyksessä liitteellä:", error);
-          alert("Sähköpostin lähetys liitteellä epäonnistui: " + (error.text || error));
-        });
-    }
-  </script>
+    <button type="submit">Luo raportti (ei vielä toimi)</button>
+  </form>
 </body>
 </html>
