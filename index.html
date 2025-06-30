@@ -91,13 +91,13 @@
       <label>Päivämäärä: <input type="date" name="paiva"></label>
     </div>
 
-    <button type="submit">Luo raportti</button>
-  </form>
-  <div class="section">
+    <div class="section">
     <h2>Liitteet</h2>
     <div id="liitteet-container"></div>
     <button type="button" onclick="lisaaLiiteRivi()">+ Lisää liite</button>
   </div>
+  <button type="submit">Luo raportti</button>
+  </form>
 
   <script>
 document.getElementById('reportForm').addEventListener('submit', function(e) {
@@ -305,63 +305,74 @@ function lisaaLiiteKentatJaPdf(doc, y, callback) {
 
 function luoPDF() {
   const doc = new window.jspdf.jsPDF();
-  doc.setFontSize(18);
+
+  // Fonttikoot
+  const otsikkoKoko = 18;      // Pääotsikko
+  const alaotsikkoKoko = 14;   // Osioiden otsikot (esim. "1. Kohdetiedot")
+  const kenttaotsikkoKoko = 12; // Alaotsikot (esim. "Kohdeosoite:")
+  const perustekstiKoko = 10;  // Varsinainen sisältö ja selitteet
+  const pieniTekstiKoko = 8;   // Viiteteksti
+
+  doc.setFontSize(otsikkoKoko);
   doc.setTextColor(216, 92, 0);
   doc.text("Hulevex Oy – Kuntotutkimusraportti", 15, 20);
 
-  doc.setFontSize(12);
+  doc.setFontSize(perustekstiKoko);
   doc.setTextColor(51, 51, 51);
 
   let y = 35;
 
   // 1. Kohdetiedot
-  doc.setFontSize(14);
+  doc.setFontSize(alaotsikkoKoko);
   doc.text("1. Kohdetiedot", 15, y);
   y += 8;
-  doc.setFontSize(12);
-  doc.text("Kohdeosoite: " + (document.querySelector('[name="osoite"]').value || "-"), 15, y);
+
+  // Otsikot ja niiden teksti samalla fonttikoolla (perustekstiKoko)
+  doc.setFontSize(perustekstiKoko);
+  doc.text("Kohdeosoite:", 21, y);
+  doc.text((document.querySelector('[name="osoite"]').value || "-"), 55, y); // Siirrä teksti lähemmäs otsikkoa
   y += 7;
-  // Muotoillaan tarkastusajankohta muotoon pp.kk.vvvv
+
+  doc.text("Tarkastusajankohta:", 21, y);
   let ajankohta = document.querySelector('[name="ajankohta"]').value || "-";
   if (ajankohta && ajankohta !== "-") {
     const [yyyy, mm, dd] = ajankohta.split("-");
     ajankohta = `${dd}.${mm}.${yyyy}`;
   }
-  doc.text("Tarkastusajankohta: " + ajankohta, 15, y);
+  doc.text(ajankohta, 55, y);
   y += 7;
 
-  // Tarkastajat
+  doc.text("Tarkastajat:", 21, y);
   const tarkastajat = Array.from(document.querySelectorAll('select[name="tarkastajat[]"]'))
     .map(sel => sel.value).filter(Boolean).join(", ");
-  doc.text("Tarkastajat: " + (tarkastajat || "-"), 15, y);
+  doc.text((tarkastajat || "-"), 55, y);
   y += 10;
 
   // 2. Tutkimuksen aiheet ja havainnot
-  doc.setFontSize(14);
+  doc.setFontSize(alaotsikkoKoko);
   doc.text("2. Tutkimuksen aiheet ja havainnot", 15, y);
   y += 8;
-  doc.setFontSize(12);
+  doc.setFontSize(perustekstiKoko);
 
   const aiheet = document.querySelectorAll('.aihe-osio');
   aiheet.forEach((aiheDiv, aiheIdx) => {
     const aihe = aiheDiv.querySelector(`select[name="aihe_${aiheIdx}"]`).value;
 
-    // Yhdistetään "Aihe:" ja aiheen nimi samalle riville, sama fonttikoko
-    doc.setFontSize(12);
-    doc.text(`Aihe: ${aihe}`, 18, y);
+    doc.setFontSize(kenttaotsikkoKoko);
+    doc.text(aihe, 21, y);
     y += 7;
 
     // Taulukon otsikkorivi
-    const colX = [22, 70, 105, 140, 185]; // tiiviimmät sarakkeet
+    const colX = [22, 70, 105, 140, 185];
     doc.setFillColor(216, 92, 0);
     doc.setTextColor(255,255,255);
     doc.rect(colX[0]-2, y-5, 170, 8, 'F');
-    doc.setFontSize(10);
-    doc.text("Alaotsikko", colX[0], y, {maxWidth: colX[1]-colX[0]-2});
+    doc.setFontSize(perustekstiKoko);
+    doc.text("Havainto", colX[0], y, {maxWidth: colX[1]-colX[0]-2});
     doc.text("Kuntoluokka", colX[1], y, {maxWidth: colX[2]-colX[1]-2});
     doc.text("Vikalauseke", colX[2], y, {maxWidth: colX[3]-colX[2]-2});
     doc.text("Suositeltu toimenpide", colX[3], y, {maxWidth: colX[4]-colX[3]-2});
-    y += 8; // SUUREMPI riviväli taulukon otsikon jälkeen
+    y += 8;
     doc.setTextColor(51,51,51);
 
     const havainnot = aiheDiv.querySelectorAll('.havainto');
@@ -371,13 +382,11 @@ function luoPDF() {
       const vikalauseke = div.querySelector(`[name="havainto_${aiheIdx}[]"]`).value || "-";
       const toimenpide = div.querySelector(`[name="havainto_toimenpide_${aiheIdx}[]"]`).value || "-";
 
-      // Laske rivimäärä jokaiselle sarakkeelle
       const alaotsikkoLines = doc.splitTextToSize(alaotsikko, colX[1]-colX[0]-2);
       const kuntoluokkaLines = doc.splitTextToSize(kuntoluokka, colX[2]-colX[1]-2);
       const vikalausekeLines = doc.splitTextToSize(vikalauseke, colX[3]-colX[2]-2);
       const toimenpideLines = doc.splitTextToSize(toimenpide, colX[4]-colX[3]-2);
 
-      // Selvitä pisin rivimäärä
       const maxLines = Math.max(
         alaotsikkoLines.length,
         kuntoluokkaLines.length,
@@ -385,25 +394,25 @@ function luoPDF() {
         toimenpideLines.length
       );
 
-      doc.setFontSize(10);
+      doc.setFontSize(perustekstiKoko);
       doc.text(alaotsikkoLines, colX[0], y, {maxWidth: colX[1]-colX[0]-2});
       doc.text(kuntoluokkaLines, colX[1], y, {maxWidth: colX[2]-colX[1]-2});
       doc.text(vikalausekeLines, colX[2], y, {maxWidth: colX[3]-colX[2]-2});
       doc.text(toimenpideLines, colX[3], y, {maxWidth: colX[4]-colX[3]-2});
 
-      y += maxLines * 6; // 6 on riviväli, säädä tarvittaessa
+      y += maxLines * 6;
 
       if (y > 270) { doc.addPage(); y = 20; }
     });
-    y += 8; // Lisää tyhjää rivien väliin taulukon jälkeen
-    doc.setFontSize(12);
+    y += 8;
+    doc.setFontSize(perustekstiKoko);
   });
 
   // Kuntoluokkien selite
-  doc.setFontSize(12);
-  doc.text("Kuntoluokkien selite:", 10, y);
+  doc.setFontSize(perustekstiKoko);
+  doc.text("Kuntoluokkien selite:", 21, y);
   y += 6;
-  doc.setFontSize(9); // <-- pienempi fontti selitteille
+  doc.setFontSize(pieniTekstiKoko); // Selitteet pienemmällä
   const selitteet = [
     "KL 1: Järjestelmän jäljellä oleva käyttöikä ei ole määriteltävissä / Vaatii korjausta pikaisesti.",
     "KL 2: Järjestelmän jäljellä oleva tekninen käyttöikä on 1–3 vuotta / Vaatii korjausta lähitulevaisuudessa.",
@@ -411,29 +420,35 @@ function luoPDF() {
     "KL 4: Järjestelmän jäljellä oleva tekninen käyttöikä on 5–10 vuotta / Uusintatutkimus noin 5 vuoden kuluttua.",
     "KL 5: Järjestelmän jäljellä oleva tekninen käyttöikä on yli 10 vuotta / Uusintatutkimus noin 10 vuoden kuluttua."
   ];
-  selitteet.forEach(s => { doc.text(s, 18, y); y += 5; }); // hieman tiiviimpi riviväli
+  selitteet.forEach(s => { doc.text(s, 21, y); y += 5; });
 
   y += 4;
-  doc.setFontSize(10);
-  doc.text("Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.", 15, y);
-  y += 10;
+  doc.setFontSize(7); // Viiteteksti vielä pienemmällä
+  const viiteteksti = "Videokuvausten havaintoja arvioidaan LVI-kuntotutkimusoppaan 2013 putkistojen videokuvausten viitearvojen perusteella.";
+  const viiteLines = doc.splitTextToSize(viiteteksti, 170);
+  doc.text(viiteLines, 21, y);
+  y += viiteLines.length * 4;
+
+  doc.setFontSize(perustekstiKoko);
+  y += 6;
 
   // Liitteet ennen raportin laatijaa
   lisaaLiiteKentatJaPdf(doc, y, function(y2) {
     // Raportin laatija -osio
-    doc.setFontSize(14);
+    doc.setFontSize(alaotsikkoKoko);
     doc.text("Raportin laatija", 15, y2);
     y2 += 8;
-    doc.setFontSize(12);
-    doc.text("Nimi: " + (document.querySelector('[name="laatija"]').value || "-"), 15, y2);
+    doc.setFontSize(perustekstiKoko);
+    doc.text("Nimi:", 21, y2);
+    doc.text((document.querySelector('[name="laatija"]').value || "-"), 55, y2);
     y2 += 7;
-    // Muotoillaan päivämäärä muotoon pp.kk.vvvv
+    doc.text("Päivämäärä:", 21, y2);
     let paiva = document.querySelector('[name="paiva"]').value || "-";
     if (paiva && paiva !== "-") {
       const [yyyy, mm, dd] = paiva.split("-");
       paiva = `${dd}.${mm}.${yyyy}`;
     }
-    doc.text("Päivämäärä: " + paiva, 15, y2);
+    doc.text(paiva, 55, y2);
     y2 += 10;
 
     doc.save("kuntotutkimusraportti.pdf");
