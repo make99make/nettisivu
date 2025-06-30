@@ -10,7 +10,6 @@
     body { font-family: Arial; max-width: 700px; margin: 2rem auto; background: #f4f4f4; padding: 2rem; }
     input, textarea, select { width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
     button { padding: 0.5rem 1rem; margin-right: 1rem; }
-    small#status { display: block; margin-top: 1rem; color: #555; font-style: italic; }
   </style>
 </head>
 <body>
@@ -36,13 +35,12 @@
 
   <button onclick="tallenna()">💾 Tallenna Firebaseen</button>
   <button onclick="viePDF()">📄 Vie PDF</button>
-  <button onclick="lahetaSahkoposti()">📧 Lähetä sähköposti</button>
-
-  <small id="status"></small>
+  <button onclick="lahetaSahkopostiIlmanLiitetta()">📧 Lähetä sähköposti (ilman liitettä)</button>
+  <button onclick="lahetaSahkopostiLiitteella()">📧 Lähetä sähköposti (liitteellä)</button>
 
   <!-- ✅ EmailJS SDK -->
   <script type="module">
-    import emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+    import * as emailjs from 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
 
     emailjs.init("UgTsc22XOYOLJqdur"); // ← sinun public key
     window.emailjs = emailjs; // tehdään saataville toisessa scriptissä
@@ -63,30 +61,12 @@
 
     const kentat = ["kohde", "osoite", "paiva", "tutkija", "tarkoitus", "menetelma", "havainnot", "suositukset", "email"];
 
-    function validoi() {
-      for (let id of kentat) {
-        const val = document.getElementById(id).value.trim();
-        if (!val) {
-          alert(`Kenttä "${id}" on pakollinen.`);
-          return false;
-        }
-      }
-      return true;
-    }
-
     function tallenna() {
-      if (!validoi()) return;
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
       db.collection("raportit").add(data)
-        .then(() => {
-          alert("Tallennettu Firebaseen");
-          document.getElementById("status").textContent = "Raportti tallennettu tietokantaan.";
-        })
-        .catch(err => {
-          alert("Virhe tallennuksessa: " + err);
-          document.getElementById("status").textContent = "Tallennus epäonnistui.";
-        });
+        .then(() => alert("Tallennettu Firebaseen"))
+        .catch(err => alert("Virhe tallennuksessa: " + err));
     }
 
     async function viePDF() {
@@ -99,7 +79,6 @@
         y += 10;
       });
       doc.save("raportti.pdf");
-      document.getElementById("status").textContent = "PDF tallennettu koneellesi.";
     }
 
     async function getPdfBase64() {
@@ -111,31 +90,52 @@
         doc.text(`${id}: ${val}`, 10, y);
         y += 10;
       });
-      return doc.output("datauristring");
+      return doc.output("datauristring"); // sisältää: data:application/pdf;base64,...
     }
 
-    async function lahetaSahkoposti() {
-      if (!validoi()) return;
-
+    async function lahetaSahkopostiIlmanLiitetta() {
       const data = {};
       kentat.forEach(id => data[id] = document.getElementById(id).value);
 
-      document.getElementById("status").textContent = "Luodaan PDF ja lähetetään sähköposti...";
+      emailjs.send("service_jk8fxlu", "template_m9rvwws", data)
+        .then(response => {
+          console.log("Sähköposti lähetetty:", response.status, response.text);
+          alert("Sähköposti lähetetty ilman liitettä!");
+        })
+        .catch(error => {
+          console.error("Virhe sähköpostin lähetyksessä:", error);
+          alert("Sähköpostin lähetys epäonnistui: " + (error.text || error));
+        });
+    }
+
+    async function lahetaSahkopostiLiitteella() {
+      const data = {};
+      kentat.forEach(id => data[id] = document.getElementById(id).value);
 
       const pdfBase64 = await getPdfBase64();
+
+      // Poistetaan "data:application/pdf;base64," alku base64-datasta
+      const base64Data = pdfBase64.split(',')[1];
+
       const params = {
         ...data,
-        attachment: pdfBase64
+        attachments: [
+          {
+            name: "raportti.pdf",
+            data: base64Data,
+            encoding: "base64"
+          }
+        ]
       };
 
       emailjs.send("service_jk8fxlu", "template_m9rvwws", params)
-        .then(() => {
-          alert("Sähköposti lähetetty liitteellä");
-          document.getElementById("status").textContent = "Sähköposti lähetetty onnistuneesti.";
+        .then(response => {
+          console.log("Sähköposti liitteellä lähetetty:", response.status, response.text);
+          alert("Sähköposti lähetetty liitteellä!");
         })
-        .catch(err => {
-          alert("Virhe: " + err);
-          document.getElementById("status").textContent = "Sähköpostin lähetys epäonnistui.";
+        .catch(error => {
+          console.error("Virhe sähköpostin lähetyksessä liitteellä:", error);
+          alert("Sähköpostin lähetys liitteellä epäonnistui: " + (error.text || error));
         });
     }
   </script>
